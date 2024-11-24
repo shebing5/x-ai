@@ -93,7 +93,9 @@
                         aria-label="消息输入框"
                     ></textarea>
                     <div class="input-buttons">
-                        <input type="file" id="imageInput" accept="image/*" style="display: none">
+                        <!-- 添加隐藏的label -->
+                        <label for="imageInput" class="sr-only">选择图片</label>
+                        <input type="file" id="imageInput" accept="image/*" style="display: none" aria-label="选择图片">
                         <button id="imageUploadBtn" class="image-upload-btn" aria-label="上传图片">
                             <span class="material-icons">image</span>
                         </button>
@@ -213,7 +215,9 @@
                 </button>
             </div>
             <div class="dialog-content">
-                <textarea id="editMessageInput" rows="4"></textarea>
+                <!-- 添加label -->
+                <label for="editMessageInput" class="sr-only">编辑消息内容</label>
+                <textarea id="editMessageInput" rows="4" placeholder="请输入要修改的内容" aria-label="编辑消息内容"></textarea>
             </div>
             <div class="dialog-footer">
                 <button id="cancelEdit" class="btn-secondary">取消</button>

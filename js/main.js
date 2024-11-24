@@ -1,12 +1,15 @@
 // XAI API Configuration
 const API_CONFIG = {
-        baseUrl: 'https://api.x.ai/v1',
-        model: localStorage.getItem('xai_model') || 'grok-beta',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('xai_api_key') || ''}`
-        }
-    };
+    baseUrl: 'https://api.x.ai/v1',
+    model: localStorage.getItem('xai_model') || 'grok-beta',
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('xai_api_key') || ''}`,
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+    }
+};
     
     // State Management
     const state = {
@@ -1286,7 +1289,7 @@ const API_CONFIG = {
             temperature: 0.8
         },
         concise: {
-            prompt: "请以简洁、直接的方式回答，直击要点，避免不必要的修饰，用最少的文字表达核心内容。",
+            prompt: "请以简洁、直接的方式回答，直击要点，避免不必要的���饰，用最少的文字表达核心内容。",
             temperature: 0.5
         }
     };
@@ -1516,5 +1519,86 @@ const API_CONFIG = {
     `;
     document.head.appendChild(style);
     
+    // 在 setupVoiceInput 函数之前添加 toggleVoiceInput 函数
+    function toggleVoiceInput() {
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            showToast('您的浏览器不支持语音输入功能', 'error');
+            return;
+        }
+
+        const voiceButton = elements.voiceInputBtn;
+        const isRecording = voiceButton.classList.contains('recording');
+
+        if (isRecording) {
+            // 如果正在录音，停止录音
+            if (window.recognition) {
+                window.recognition.stop();
+            }
+            voiceButton.classList.remove('recording');
+            voiceButton.innerHTML = '<span class="material-icons">mic_none</span>';
+        } else {
+            // 开始录音
+            try {
+                if (!window.recognition) {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    window.recognition = new SpeechRecognition();
+                    
+                    // 配置语音识别
+                    window.recognition.continuous = false;
+                    window.recognition.interimResults = true;
+                    window.recognition.lang = 'zh-CN';
+
+                    // 处理结果
+                    window.recognition.onresult = (event) => {
+                        const transcript = Array.from(event.results)
+                            .map(result => result[0].transcript)
+                            .join('');
+                        
+                        elements.messageInput.value = transcript;
+                        autoResizeTextarea();
+                    };
+
+                    // 处理结束
+                    window.recognition.onend = () => {
+                        voiceButton.classList.remove('recording');
+                        voiceButton.innerHTML = '<span class="material-icons">mic_none</span>';
+                    };
+
+                    // 处理错误
+                    window.recognition.onerror = (event) => {
+                        console.error('语音识别错误:', event.error);
+                        let errorMessage = '语音识别失败';
+                        
+                        switch (event.error) {
+                            case 'not-allowed':
+                                errorMessage = '请允许使用麦克风';
+                                break;
+                            case 'no-speech':
+                                errorMessage = '未检测到语音';
+                                break;
+                            case 'network':
+                                errorMessage = '网络连接错误';
+                                break;
+                        }
+                        
+                        showToast(errorMessage, 'error');
+                        voiceButton.classList.remove('recording');
+                        voiceButton.innerHTML = '<span class="material-icons">mic_none</span>';
+                    };
+                }
+
+                window.recognition.start();
+                voiceButton.classList.add('recording');
+                voiceButton.innerHTML = '<span class="material-icons">mic</span>';
+                showToast('开始语音输入...', 'info');
+            } catch (error) {
+                console.error('语音识别启动失败:', error);
+                showToast('语音识别启动失败', 'error');
+                voiceButton.classList.remove('recording');
+                voiceButton.innerHTML = '<span class="material-icons">mic_none</span>';
+            }
+        }
+    }
+
     // Initialize the app
     document.addEventListener('DOMContentLoaded', initializeApp);

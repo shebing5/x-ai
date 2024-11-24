@@ -284,10 +284,10 @@ body {
 .chat-item-actions {
     display: flex;
     gap: 0.25rem;
-    opacity: 0;
-    transition: opacity 0.2s;
+    /* 移除透明度相关的代码 */
 }
 
+/* 移除原有的hover效果 */
 .chat-item:hover .chat-item-actions {
     opacity: 1;
 }
@@ -302,11 +302,35 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    opacity: 1; /* 保持完全不透明 */
+    transition: background-color 0.2s, color 0.2s;
 }
 
+/* 普通状态下的按钮样式 */
+.chat-item-btn {
+    background-color: var(--bg-secondary);
+}
+
+/* 鼠标悬停效果 */
 .chat-item-btn:hover {
-    background-color: rgba(0, 0, 0, 0.1);
-    color: var(--text-primary);
+    background-color: var(--hover-color);
+    color: var(--accent-color);
+}
+
+/* 暗色主题下的按钮样式 */
+[data-theme="dark"] .chat-item-btn {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .chat-item-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: var(--accent-color);
+}
+
+/* 激活状态下的按钮样式 */
+.chat-item.active .chat-item-btn {
+    color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 .chat-item.active .chat-item-btn:hover {
@@ -374,6 +398,8 @@ body {
     user-select: text; /* 允许文本选择 */
     cursor: auto; /* 确保鼠标指针正确显示 */
     -webkit-tap-highlight-color: transparent; /* 移除移动端点击高亮 */
+    -webkit-user-select: text;
+    user-select: text;
 }
 
 /* 自定义滚动条样式 */
@@ -1363,6 +1389,8 @@ button {
     user-select: none;
     -webkit-tap-highlight-color: transparent;
     min-height: 44px; /* 确保触摸目标足够大 */
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 /* 移动端响应式布局优化 */
