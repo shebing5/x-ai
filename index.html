@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>XAI 智能对话系统</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body class="light-theme no-double-tap-zoom">
+    <div class="app-container">
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="material-icons">wifi</span>
+                <span class="status-text">已连接</span>
+            </div>
+            <div class="status-item">
+                <span class="material-icons">memory</span>
+                <span class="status-text">模型: <span id="currentModel">grok-beta</span></span>
+            </div>
+            <div class="status-item">
+                <span class="material-icons">api</span>
+                <span class="status-text">API状态: <span id="apiStatus">正常</span></span>
+            </div>
+            <div class="status-item">
+                <span class="material-icons">schedule</span>
+                <span class="status-text" id="responseTime">响应时间: 0ms</span>
+            </div>
+        </div>
+
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>XAI Chat</h1>
+                <button id="themeToggle" class="theme-toggle" aria-label="切换主题">
+                    <span class="material-icons sun-icon">light_mode</span>
+                    <span class="material-icons moon-icon">dark_mode</span>
+                </button>
+            </div>
+            <div class="sidebar-content">
+                <button id="newChat" class="new-chat-btn">
+                    <span class="material-icons">add</span>
+                    新建对话
+                </button>
+                <div class="chat-history" id="chatHistory">
+                    <!-- 历史对话列表将在这里动态生成 -->
+                </div>
+            </div>
+            <div class="sidebar-footer">
+                <button id="settingsBtn" class="settings-btn">
+                    <span class="material-icons">settings</span>
+                    设置
+                </button>
+            </div>
+        </aside>
+
+        <!-- 主聊天区域 -->
+        <main class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <!-- 欢迎消息 -->
+                <div class="message ai-message welcome-message">
+                    <div class="message-content">
+                        <h2>欢迎使用 XAI 智能对话系统 👋</h2>
+                        <p>我是您的AI助手，具备以下特点：</p>
+                        <ul>
+                            <li>💡 清晰的思考过程展示</li>
+                            <li>📊 置信度评分可视化</li>
+                            <li>🔍 关键信息智能高亮</li>
+                            <li>📚 引用来源实时展示</li>
+                            <li>🎯 个性化交互体验</li>
+                            <li>🖼️ 图像理解与分析</li>
+                        </ul>
+                        <p>您可以输入任何问题或上传图片，我会尽力提供专业、准确的回答。</p>
+                        <div class="setup-notice">
+                            <p>⚠️ 请先在设置中配置您的API密钥才能开始对话。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <div class="input-wrapper">
+                    <textarea 
+                        id="messageInput" 
+                        placeholder="输入消息... (按Enter发送，Shift+Enter换行)" 
+                        rows="1"
+                        aria-label="消息输入框"
+                    ></textarea>
+                    <div class="input-buttons">
+                        <input type="file" id="imageInput" accept="image/*" style="display: none">
+                        <button id="imageUploadBtn" class="image-upload-btn" aria-label="上传图片">
+                            <span class="material-icons">image</span>
+                        </button>
+                        <button id="voiceInputBtn" class="voice-input-btn" aria-label="语音输入">
+                            <span class="material-icons">mic</span>
+                        </button>
+                        <button id="sendButton" class="send-btn" aria-label="发送消息">
+                            <span class="material-icons">send</span>
+                        </button>
+                    </div>
+                </div>
+                <div id="imagePreview" class="image-preview hidden">
+                    <img id="previewImg" src="" alt="预览图片">
+                    <button id="removeImage" class="remove-image-btn" aria-label="移除图片">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- 设置面板 -->
+        <div id="settingsPanel" class="settings-panel hidden">
+            <div class="settings-header">
+                <h2>设置</h2>
+                <button class="close-btn" id="closeSettings">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <div class="settings-content">
+                <section class="api-settings">
+                    <h3>API 设置</h3>
+                    <div class="setting-item">
+                        <label for="apiKey">API 密钥</label>
+                        <div class="api-key-input">
+                            <input type="password" id="apiKey" placeholder="输入您的 API 密钥">
+                            <button id="toggleApiKey" class="toggle-password">
+                                <span class="material-icons">visibility_off</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <label for="modelSelect">AI 模型</label>
+                        <select id="modelSelect">
+                            <option value="grok-beta">Grok Beta - 基础对话模型</option>
+                            <option value="grok-vision-beta">Grok Vision Beta - 图像理解模型</option>
+                        </select>
+                    </div>
+                </section>
+                <section>
+                    <h3>对话设置</h3>
+                    <div class="setting-item">
+                        <label for="maxHistorySize">历史记录数量</label>
+                        <select id="maxHistorySize">
+                            <option value="10">保留最近10条</option>
+                            <option value="20">保留最近20条</option>
+                            <option value="50">保留最近50条</option>
+                            <option value="100">保留最近100条</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label for="autoTitle">自动生成标题</label>
+                        <input type="checkbox" id="autoTitle" checked>
+                    </div>
+                </section>
+                <section>
+                    <h3>显示设置</h3>
+                    <div class="setting-item">
+                        <label for="fontSize">字体大小</label>
+                        <select id="fontSize">
+                            <option value="small">小</option>
+                            <option value="medium" selected>中</option>
+                            <option value="large">大</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label for="bubbleStyle">气泡样式</label>
+                        <select id="bubbleStyle">
+                            <option value="round">圆角</option>
+                            <option value="sharp">方角</option>
+                        </select>
+                    </div>
+                </section>
+                <section>
+                    <h3>AI 设置</h3>
+                    <div class="setting-item">
+                        <label for="aiStyle">回复风格</label>
+                        <select id="aiStyle">
+                            <option value="professional">专业</option>
+                            <option value="friendly">友好</option>
+                            <option value="concise">简洁</option>
+                        </select>
+                    </div>
+                </section>
+                <section>
+                    <h3>快捷键设置</h3>
+                    <div class="setting-item">
+                        <label for="sendShortcut">发送消息</label>
+                        <input type="text" id="sendShortcut" value="Enter" readonly>
+                    </div>
+                </section>
+                <section>
+                    <h3>辅助功能</h3>
+                    <div class="setting-item">
+                        <label for="screenReader">屏幕阅读器优化</label>
+                        <input type="checkbox" id="screenReader">
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- 消息编辑对话框 -->
+        <div id="editMessageDialog" class="dialog hidden">
+            <div class="dialog-header">
+                <h3>编辑消息</h3>
+                <button class="close-btn" id="closeEditDialog">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <div class="dialog-content">
+                <textarea id="editMessageInput" rows="4"></textarea>
+            </div>
+            <div class="dialog-footer">
+                <button id="cancelEdit" class="btn-secondary">取消</button>
+                <button id="saveEdit" class="btn-primary">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 容器 -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- 返回顶部按钮 -->
+    <button id="scrollTopBtn" class="scroll-top-btn hidden" aria-label="返回顶部">
+        <span class="material-icons">arrow_upward</span>
+    </button>
+
+    <!-- 脚本引入 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

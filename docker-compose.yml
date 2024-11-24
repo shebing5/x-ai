@@ -1,0 +1,10 @@
+version: '3'
+services:
+  xai-chat:
+    build: .
+    ports:
+      - "3000:80"  # 修改为 3000:80，避免与本地其他服务的 80 端口冲突
+    volumes:
+      - ./:/usr/share/nginx/html
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    restart: always
